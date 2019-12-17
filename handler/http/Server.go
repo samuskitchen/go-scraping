@@ -4,12 +4,13 @@ import (
 	"../../driver"
 	"encoding/json"
 	"github.com/go-chi/chi"
+	"log"
 	"net/http"
-	"strconv"
+	"time"
 
-	//model_domain "../../model/domain"
 	model_ssl "../../model/ssllabs"
 	//model_serve "../../model"
+	model_domain "../../model/domain"
 	repository "../../repository"
 	domain "../../repository/domain"
 )
@@ -25,16 +26,47 @@ type Domain struct {
 }
 
 
-func (p *Domain) Create(ssl *model_ssl.SSL) {
+func (rp *Domain) Create(ssl *model_ssl.SSL) {
 
 }
 
 
-func (p *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
+func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	address := chi.URLParam(r, "address")
 	data, err := GetDataSSl(address)
 
-	//payload, err := p.repo.GetByDomain(r.Context(), address)
+	payload, err := rp.repo.GetDomainByAddress(address)
+
+	if (model_domain.Domain{}) == payload {
+		dm := model_domain.Domain{}
+		dm.Address = data.Host
+
+		idDomain, err := rp.repo.CreateDomain(dm)
+
+		if err != nil {
+			log.Fatal(err)
+			respondWithError(w, http.StatusNoContent, err.Error())
+		}
+
+		for _, element := range data.Endpoints {
+			dt := model_domain.DetailDomain{}
+
+			dt.IDDomain = idDomain
+			dt.IpAddress = element.IpAddress
+			dt.Grade = element.Grade
+			dt.ServerName = element.ServerName
+			dt.Date = time.Now()
+
+			err = rp.repo.CreateDetailDomain(dt)
+
+			if err != nil{
+				log.Fatal(err)
+				respondWithError(w, http.StatusNoContent, err.Error())
+			}
+		}
+	} else {
+
+	}
 
 	if err != nil {
 		respondWithError(w, http.StatusNoContent, "Address not found")
@@ -43,9 +75,8 @@ func (p *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, data)
 }
 
-func (p *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(chi.URLParam(r, "address"))
-	payload, err := p.repo.GetByDomain(r.Context(), string(id))
+func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
+	payload, err := rp.repo.GetAllDomain()
 
 	if err != nil {
 		respondWithError(w, http.StatusNoContent, "Address not found")

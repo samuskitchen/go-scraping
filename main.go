@@ -75,9 +75,9 @@ func initDataBase(connection *sql.DB) {
 		log.Fatal(err)
 	}
 
-	if _, err := connection.Exec(
+	/*if _, err := connection.Exec(
 		"INSERT INTO domain (address) VALUES ('google.com'), ('s4n.co')");
 		err != nil {
 		log.Fatal(err)
-	}
+	}*/
 }
