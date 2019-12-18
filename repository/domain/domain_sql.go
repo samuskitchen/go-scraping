@@ -3,7 +3,9 @@ package domain
 import (
 	domain "../../model/domain"
 	repo "../../repository"
+	"context"
 	"database/sql"
+	_ "github.com/lib/pq"
 	"log"
 )
 
@@ -17,30 +19,37 @@ type sqlDomainRepo struct {
 	Conn *sql.DB
 }
 
-func (s *sqlDomainRepo) CreateDomain(domain domain.Domain) (int64, error){
+func (s *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) (int64, error){
 	var domainId int64
-	query := "INSERT INTO domain(address) VALUES($1) RETURNING id"
+	query := "INSERT INTO domain(address, last_consultation) VALUES($1, $2) RETURNING id"
 
-	err := s.Conn.QueryRow(query, domain.Address).Scan(&domainId)
-
+	stmt, err := s.Conn.PrepareContext(ctx, query)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(domain.Address, domain.LastConsultation).Scan(&domainId)
+	if err != nil {
+		return -1, err
+	}
+
 
 	return domainId, err
 
 }
 
-func (s *sqlDomainRepo) CreateDetailDomain(detailDomain domain.DetailDomain) error {
+func (s *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain domain.DetailDomain) error {
 	query := "INSERT INTO detail_domain(id_domain, ipaddress, servername, grade, date) VALUES($1, $2, $3, $4, $5)"
 
-	stmt, err := s.Conn.Prepare(query)
+	stmt, err := s.Conn.PrepareContext(ctx, query)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = stmt.Exec(detailDomain.IDDomain, detailDomain.IpAddress, detailDomain.ServerName, detailDomain.Grade, detailDomain.Date)
+	_, err = stmt.ExecContext(ctx, detailDomain.IDDomain, detailDomain.IpAddress, detailDomain.ServerName, detailDomain.Grade, detailDomain.Date)
+	defer stmt.Close()
 
 	if err != nil {
 		log.Fatal(err)
@@ -49,10 +58,10 @@ func (s *sqlDomainRepo) CreateDetailDomain(detailDomain domain.DetailDomain) err
 	return err
 }
 
-func (s *sqlDomainRepo) GetAllDomain() ([]domain.Domain, error) {
-	query := "SELECT dm.id, dm.address FROM domain AS dm"
+func (s *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, error) {
+	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm"
 
-	rows, err := s.Conn.Query(query)
+	rows, err := s.Conn.QueryContext(ctx, query)
 
 	if err != nil {
 		log.Fatal(err)
@@ -61,10 +70,10 @@ func (s *sqlDomainRepo) GetAllDomain() ([]domain.Domain, error) {
 	return buildDomains(rows)
 }
 
-func (s *sqlDomainRepo) GetDomainByAddress(address string) (domain.Domain, error) {
-	query := "SELECT dm.id, dm.address FROM domain AS dm WHERE dm.address = $1"
+func (s *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string) (domain.Domain, error) {
+	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm WHERE dm.address = $1"
 
-	rows, err := s.Conn.Query(query, address)
+	rows, err := s.Conn.QueryContext(ctx, query, address)
 
 	if err != nil {
 		log.Fatal(err)
@@ -73,10 +82,10 @@ func (s *sqlDomainRepo) GetDomainByAddress(address string) (domain.Domain, error
 	return buildDomain(rows)
 }
 
-func (s *sqlDomainRepo) GetDetailsByDomain(idDomain int64, countServer int64) ([]domain.DetailDomain, error) {
+func (s *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64, countServer int) ([]domain.DetailDomain, error) {
 	query := "SELECT dt.id, dt.id_domain, dt.ipaddress, dt.grade, dt.servername, dt.date FROM domain AS dm INNER JOIN detail_domain AS dt ON dt.id_domain = dm.id WHERE dm.address = $1 ORDER BY dt.date DESC LIMIT $2"
 
-	rows, err := s.Conn.Query(query, idDomain, countServer)
+	rows, err := s.Conn.QueryContext(ctx, query, idDomain, countServer)
 
 	if err != nil {
 		log.Fatal(err)
@@ -92,7 +101,7 @@ func buildDomain(rows *sql.Rows) (domain.Domain, error) {
 	for rows.Next() {
 		b := domain.Domain{}
 
-		if err := rows.Scan(&b.ID, &b.Address); err != nil {
+		if err := rows.Scan(&b.ID, &b.Address, &b.LastConsultation); err != nil {
 			return resultEmpty, err
 		}
 
@@ -112,7 +121,7 @@ func buildDomains(rows *sql.Rows) ([]domain.Domain, error) {
 	for rows.Next() {
 		b := domain.Domain{}
 
-		if err := rows.Scan(&b.ID, &b.Address); err != nil {
+		if err := rows.Scan(&b.ID, &b.Address, &b.LastConsultation); err != nil {
 			return nil, err
 		}
 		results = append(results, b)

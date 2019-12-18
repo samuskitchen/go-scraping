@@ -2,12 +2,13 @@ package repository
 
 import (
 	"../model/domain"
+	"context"
 )
 
 type DomainRepo interface {
-	CreateDomain(domain domain.Domain) (int64, error)
-	CreateDetailDomain(detailDomain domain.DetailDomain) error
-	GetAllDomain()([]domain.Domain, error)
-	GetDomainByAddress(address string) (domain.Domain, error)
-	GetDetailsByDomain(idDomain int64, countServer int64) ([]domain.DetailDomain, error)
+	CreateDomain(ctx context.Context, domain domain.Domain) (int64, error)
+	CreateDetailDomain(ctx context.Context, detailDomain domain.DetailDomain) error
+	GetAllDomain(ctx context.Context)([]domain.Domain, error)
+	GetDomainByAddress(ctx context.Context, address string) (domain.Domain, error)
+	GetDetailsByDomain(ctx context.Context, idDomain int64, countServer int) ([]domain.DetailDomain, error)
 }
