@@ -19,11 +19,11 @@ type sqlDomainRepo struct {
 	Conn *sql.DB
 }
 
-func (s *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) (int64, error){
+func (sql *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) (int64, error){
 	var domainId int64
 	query := "INSERT INTO domain(address, last_consultation) VALUES($1, $2) RETURNING id"
 
-	stmt, err := s.Conn.PrepareContext(ctx, query)
+	stmt, err := sql.Conn.PrepareContext(ctx, query)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,10 +39,10 @@ func (s *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) 
 
 }
 
-func (s *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain domain.DetailDomain) error {
+func (sql *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain domain.DetailDomain) error {
 	query := "INSERT INTO detail_domain(id_domain, ipaddress, servername, grade, date) VALUES($1, $2, $3, $4, $5)"
 
-	stmt, err := s.Conn.PrepareContext(ctx, query)
+	stmt, err := sql.Conn.PrepareContext(ctx, query)
 
 	if err != nil {
 		log.Fatal(err)
@@ -58,10 +58,10 @@ func (s *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain dom
 	return err
 }
 
-func (s *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, error) {
+func (sql *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, error) {
 	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm"
 
-	rows, err := s.Conn.QueryContext(ctx, query)
+	rows, err := sql.Conn.QueryContext(ctx, query)
 
 	if err != nil {
 		log.Fatal(err)
@@ -70,10 +70,10 @@ func (s *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, erro
 	return buildDomains(rows)
 }
 
-func (s *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string) (domain.Domain, error) {
+func (sql *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string) (domain.Domain, error) {
 	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm WHERE dm.address = $1"
 
-	rows, err := s.Conn.QueryContext(ctx, query, address)
+	rows, err := sql.Conn.QueryContext(ctx, query, address)
 
 	if err != nil {
 		log.Fatal(err)
@@ -82,10 +82,10 @@ func (s *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string) 
 	return buildDomain(rows)
 }
 
-func (s *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64, countServer int) ([]domain.DetailDomain, error) {
-	query := "SELECT dt.id, dt.id_domain, dt.ipaddress, dt.grade, dt.servername, dt.date FROM domain AS dm INNER JOIN detail_domain AS dt ON dt.id_domain = dm.id WHERE dm.address = $1 ORDER BY dt.date DESC LIMIT $2"
+func (sql *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64, countServer int) ([]domain.DetailDomain, error) {
+	query := "SELECT dt.id, dt.id_domain, dt.ipaddress, dt.grade, dt.servername, dt.date FROM domain AS dm INNER JOIN detail_domain AS dt ON dt.id_domain = dm.id WHERE dm.id = $1 ORDER BY dt.id, dt.date DESC LIMIT $2"
 
-	rows, err := s.Conn.QueryContext(ctx, query, idDomain, countServer)
+	rows, err := sql.Conn.QueryContext(ctx, query, idDomain, countServer)
 
 	if err != nil {
 		log.Fatal(err)
@@ -141,7 +141,7 @@ func buildDetailsDomain(rows *sql.Rows) ([]domain.DetailDomain, error) {
 	for rows.Next() {
 		b := domain.DetailDomain{}
 
-		if err := rows.Scan(&b.ID, &b.IDDomain, &b.IpAddress, &b.ServerName, &b.Grade, &b.Date); err != nil {
+		if err := rows.Scan(&b.ID, &b.IDDomain, &b.IpAddress, &b.Grade, &b.ServerName, &b.Date); err != nil {
 			return nil, err
 		}
 		results = append(results, b)

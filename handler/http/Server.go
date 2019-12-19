@@ -3,8 +3,10 @@ package http
 import (
 	"../../driver"
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi"
 	"net/http"
+	"regexp"
 	"time"
 
 	modelServe "../../model"
@@ -33,18 +35,19 @@ func (rp *Domain) Create(ssl *modelSsl.SSL) {
 func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	address := chi.URLParam(r, "address")
 	data, err := GetDataSSl(address)
+
+	loc, _ := time.LoadLocation("America/Bogota")
 	var dataServer modelServe.DataServe
 	var servers []modelServe.Serve
-
-	/*it, err := rp.repo.GetAllDomain(r.Context())
-	fmt.Println(it)*/
-	payload, err := rp.repo.GetDomainByAddress(r.Context(), address)
 	var changeServer bool
+
+	address = ValidateURL(address)
+	payload, err := rp.repo.GetDomainByAddress(r.Context(), address)
 
 	if (modelDomain.Domain{}) == payload {
 		dm := modelDomain.Domain{}
-		dm.Address = data.Host
-		dm.LastConsultation = time.Now()
+		dm.Address = address
+		dm.LastConsultation = time.Now().In(loc)
 
 		idDomain, err := rp.repo.CreateDomain(r.Context(), dm)
 
@@ -56,24 +59,50 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		SaveDetailDomain(data, idDomain, rp, w, r)
 	} else {
 
-		detailsDomain, err := rp.repo.GetDetailsByDomain(r.Context(), payload.ID,  len(data.Endpoints))
+		//detailsDomain, err := rp.repo.GetDetailsByDomain(r.Context(), payload.ID, len(data.Endpoints))
 
 		if err != nil {
 			//log.Fatal(err)
 			respondWithError(w, http.StatusNoContent, err.Error())
 		}
 
-		for _, element := range detailsDomain{
-			for _, dataElement := range data.Endpoints {
-				if dataElement.Grade != element.Grade || dataElement.ServerName != element.ServerName || dataElement.IpAddress != element.IpAddress{
-					changeServer = true
+		loc, _ := time.LoadLocation("America/Bogota")
+
+		now := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, loc)
+		//now := time.Now().Round(.000000).In(loc)
+		fmt.Println("\nToday : ", loc, " Time : ", now)
+
+		pastDate := payload.LastConsultation
+		fmt.Println("Time : ", pastDate) //
+		fmt.Printf("###############################################################\n")
+		diff := now.Sub(pastDate)
+
+		hrs := int(diff.Hours()/60.0)
+		fmt.Printf("Diffrence in Hours : %d Hours\n", hrs)
+
+
+		/*hours := time.Now().In(loc).Sub(payload.LastConsultation).Hours()
+		fmt.Println("Hours", hours)
+
+		if hours >= 1 {
+			if len(data.Endpoints) == len(detailsDomain){
+				for i := 0; i < len(data.Endpoints); i++ {
+					if data.Endpoints[i].Grade != detailsDomain[i].Grade ||
+						data.Endpoints[i].ServerName != detailsDomain[i].ServerName ||
+						data.Endpoints[i].IpAddress != detailsDomain[i].IpAddress{
+						changeServer = true
+					}
 				}
+			}else if len(data.Endpoints) > len(detailsDomain){
+				changeServer = true
 			}
 		}
 
+
+
 		if changeServer {
 			SaveDetailDomain(data, payload.ID, rp, w, r)
-		}
+		}*/
 	}
 
 	//TODO Build return data
@@ -103,7 +132,18 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, dataServer)
 }
 
+func ValidateURL(address string) string {
+	space := regexp.MustCompile(`^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)`)
+	address = space.ReplaceAllString(address, "$1\u200B")
+	//address = strings.TrimSpace(address)
+	//address = strings.TrimLeft(address, "")
+	//address = strings.TrimRight(address, "")
+	return address
+}
+
 func SaveDetailDomain(data modelSsl.SSL, idDomain int64, rp *Domain, w http.ResponseWriter, r *http.Request) {
+	loc, _ := time.LoadLocation("America/Bogota")
+
 	for _, element := range data.Endpoints {
 		dt := modelDomain.DetailDomain{}
 
@@ -111,7 +151,7 @@ func SaveDetailDomain(data modelSsl.SSL, idDomain int64, rp *Domain, w http.Resp
 		dt.IpAddress = element.IpAddress
 		dt.Grade = element.Grade
 		dt.ServerName = element.ServerName
-		dt.Date = time.Now()
+		dt.Date = time.Now().In(loc)
 
 		err := rp.repo.CreateDetailDomain(r.Context(), dt)
 
