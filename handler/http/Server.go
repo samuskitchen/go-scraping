@@ -2,18 +2,24 @@ package http
 
 import (
 	"../../driver"
+	"bufio"
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi"
+	"net"
 	"net/http"
+	"os/exec"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	modelServe "../../model"
 	modelDomain "../../model/domain"
 	modelSsl "../../model/ssllabs"
-	repository "../../repository"
-	domain "../../repository/domain"
+	"../../repository"
+	"../../repository/domain"
 )
 
 func NewServerHandler(db *driver.DB) *Domain {
@@ -28,6 +34,8 @@ type Domain struct {
 
 func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	address := chi.URLParam(r, "address")
+	address = validateURL(address)
+
 	data, err := GetDataSSl(address)
 
 	loc, _ := time.LoadLocation("America/Bogota")
@@ -36,7 +44,6 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	var detailsDomain []modelDomain.DetailDomain
 	var changeServer bool
 
-	address = validateURL(address)
 	payload, err := rp.repo.GetDomainByAddress(r.Context(), address)
 
 	if (modelDomain.Domain{}) == payload {
@@ -47,7 +54,6 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		idDomain, err := rp.repo.CreateDomain(r.Context(), dm)
 
 		if err != nil {
-			//log.Fatal(err)
 			respondWithError(w, http.StatusNoContent, err.Error())
 		}
 
@@ -57,51 +63,128 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		detailsDomain, err := rp.repo.GetDetailsByDomain(r.Context(), payload.ID, len(data.Endpoints))
 
 		if err != nil {
-			//log.Fatal(err)
 			respondWithError(w, http.StatusNoContent, err.Error())
 		}
 
 		changeServer = validateChangeServer(loc, payload, data, detailsDomain, changeServer)
 
 		if changeServer {
+			err = rp.repo.UpdateLastGetDomain(r.Context(), payload.ID, time.Now())
 			saveDetailDomain(data, payload.ID, rp, w, r)
 		}
 	}
-
-	currentGrade := getLowestGradeCurrent(data.Endpoints)
-	var previousGrade string
-
-	if detailsDomain == nil {
-		previousGrade = currentGrade
-	} else {
-		previousGrade = getLowestGradePrevious(detailsDomain)
-	}
-
-	//TODO Build return data
-	for _, dataElement := range data.Endpoints {
-		serve := modelServe.Serve{}
-
-		serve.Address = dataElement.IpAddress
-		serve.SslGrade = dataElement.Grade
-		serve.Country = ""
-		serve.Owner = ""
-
-		servers = append(servers, serve)
-	}
-
-	dataServer.Serves = servers
-	dataServer.ServersChanged = changeServer
-	dataServer.SslGrade = currentGrade
-	dataServer.PreviousSslGrade = previousGrade
-	dataServer.Logo = ""
-	dataServer.Title = ""
-	dataServer.IsDown = false
 
 	if err != nil {
 		respondWithError(w, http.StatusNoContent, "Address not found")
 	}
 
-	respondWithJSON(w, http.StatusOK, dataServer)
+	if "IN_PROGRESS" != data.Status && "DNS" != data.Status {
+		currentGrade := getLowestGradeCurrent(data.Endpoints)
+		var previousGrade string
+
+		if detailsDomain == nil {
+			previousGrade = currentGrade
+		} else {
+			previousGrade = getLowestGradePrevious(detailsDomain)
+		}
+
+		result := RunWhoIs("2606:4700:0:0:0:0:6811:6005")
+
+		fmt.Println(result)
+		fmt.Println("========================================================================")
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		//TODO Build return data
+		for _, dataElement := range data.Endpoints {
+			serve := modelServe.Serve{}
+
+			serve.Address = dataElement.IpAddress
+			serve.SslGrade = dataElement.Grade
+			serve.Country = ""
+			serve.Owner = ""
+
+			servers = append(servers, serve)
+		}
+
+		dataServer.Serves = servers
+		dataServer.ServersChanged = changeServer
+		dataServer.SslGrade = currentGrade
+		dataServer.PreviousSslGrade = previousGrade
+		dataServer.Logo = ""
+		dataServer.Title = ""
+		dataServer.IsDown = false
+
+		//r.Context().Done()
+		respondWithJSON(w, http.StatusOK, dataServer)
+	} else {
+		dataServer.IsDown = true
+		respondWithJSON(w, http.StatusOK, dataServer)
+	}
+
+}
+
+func RunWhoIs(ipAddr string) string {
+
+	// Parse IP to make sure it is valid
+	ipObj := net.ParseIP(ipAddr)
+	if ipObj == nil {
+		return "Invalid IP Address!"
+	}
+
+	// Use parsed IP for security reasons
+	ipAddr = ipObj.String()
+
+	// IANA WHOIS Server
+	ianaServer := "whois.iana.org"
+
+	// Run whois on IANA Server and get response
+	ianaResponse := runWhoIsCommand("-h", ianaServer, ipAddr)
+
+	/**
+	    Try to get the whois server to query from IANA Response
+	**/
+
+	// Default whois server in case we cannot find another one IANA
+	whoisServer := "whois.arin.net"
+
+	// Create a scanner to scan through IANA Response
+	reader := bytes.NewReader(ianaResponse.Bytes())
+	scanner := bufio.NewScanner(reader)
+	// Scan lines
+	scanner.Split(bufio.ScanLines)
+
+	// Scan through lines and find refer server
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.Contains(line, "refer:") {
+			// Trim the refer: on left
+			whoisServer = strings.TrimPrefix(line, "refer:")
+			// Trim whitespace
+			whoisServer = strings.TrimSpace(whoisServer)
+		}
+	}
+
+	// Finally, run the actual whois command with the right whois servers
+	whois := runWhoIsCommand("-h", whoisServer, ipAddr)
+
+	return whois.String()
+}
+
+func runWhoIsCommand(args ...string) bytes.Buffer {
+	// Store output on buffer
+	var out bytes.Buffer
+
+	// Execute command
+	cmd := exec.Command("whois", args...)
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	cmd.Run()
+
+	return out
 }
 
 func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +194,7 @@ func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusNoContent, "Address not found")
 	}
 
+	//r.Context().Done()
 	respondWithJSON(w, http.StatusOK, payload)
 }
 
@@ -163,11 +247,14 @@ func getLowestGradeCurrent(data []modelSsl.Endpoint) string {
 		}
 	}
 
-	sort.Slice(gradeAscii, func(i, j int) bool {
-		return gradeAscii[i] > gradeAscii[j]
-	})
+	if len(gradeAscii) > 1 {
+		sort.Slice(gradeAscii, func(i, j int) bool {
+			return gradeAscii[i] > gradeAscii[j]
+		})
 
-	grade = string(gradeAscii[0])
+		grade = string(gradeAscii[0])
+	}
+
 	return grade
 }
 
@@ -184,11 +271,14 @@ func getLowestGradePrevious(detail []modelDomain.DetailDomain) string {
 		}
 	}
 
-	sort.Slice(gradeAscii, func(i, j int) bool {
-		return gradeAscii[i] > gradeAscii[j]
-	})
+	if len(gradeAscii) > 1 {
+		sort.Slice(gradeAscii, func(i, j int) bool {
+			return gradeAscii[i] > gradeAscii[j]
+		})
 
-	grade = string(gradeAscii[0])
+		grade = string(gradeAscii[0])
+	}
+
 	return grade
 }
 

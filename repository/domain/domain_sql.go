@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
+	"time"
 )
 
 func NewSQLDomainRepo(Conn *sql.DB) repo.DomainRepo {
@@ -34,7 +35,6 @@ func (sql *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain
 		return -1, err
 	}
 
-
 	return domainId, err
 
 }
@@ -57,6 +57,26 @@ func (sql *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain d
 
 	return err
 }
+
+func (sql *sqlDomainRepo) UpdateLastGetDomain(ctx context.Context, idDomain int64, date time.Time) error {
+	query := "UPDATE domain SET last_consultation = $1 WHERE id = $2"
+
+	stmt, err := sql.Conn.PrepareContext(ctx, query)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = stmt.ExecContext(ctx, date, idDomain)
+	defer stmt.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return err
+}
+
 
 func (sql *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, error) {
 	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm"

@@ -56,18 +56,13 @@ func main() {
 
 func domainRouter(dHandler *dh.Domain) http.Handler {
 	r := chi.NewRouter()
-	//r.Get("/", dHandler.GetAllAddress)
+	r.Get("/", dHandler.GetAllAddress)
 	r.Get("/{address}", dHandler.GetByAddress)
 
 	return r
 }
 
 func initDataBase(connection *sql.DB) {
-	/*if _, err := connection.Exec(
-		"CREATE DATABASE scraping WITH ENCODING = 'UTF8'");
-		err != nil {
-		log.Fatal(err)
-	}*/
 
 	if _, err := connection.Exec(
 		"CREATE TABLE IF NOT EXISTS domain (id SERIAL PRIMARY KEY, address varchar(100) NOT NULL, last_consultation TIMESTAMP NOT NULL)");
