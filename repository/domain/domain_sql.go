@@ -1,7 +1,7 @@
 package domain
 
 import (
-	domain "../../model/domain"
+	"../../model/domain"
 	repo "../../repository"
 	"context"
 	"database/sql"
@@ -20,7 +20,7 @@ type sqlDomainRepo struct {
 	Conn *sql.DB
 }
 
-func (sql *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) (int64, error){
+func (sql *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain) (int64, error) {
 	var domainId int64
 	query := "INSERT INTO domain(address, last_consultation) VALUES($1, $2) RETURNING id"
 
@@ -77,7 +77,6 @@ func (sql *sqlDomainRepo) UpdateLastGetDomain(ctx context.Context, idDomain int6
 	return err
 }
 
-
 func (sql *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, error) {
 	query := "SELECT dm.id, dm.address, dm.last_consultation FROM domain AS dm"
 
@@ -87,7 +86,7 @@ func (sql *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, er
 		log.Fatal(err)
 	}
 
-	return buildDomains(rows)
+	return domain.BuildDomains(rows)
 }
 
 func (sql *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string) (domain.Domain, error) {
@@ -99,7 +98,7 @@ func (sql *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string
 		log.Fatal(err)
 	}
 
-	return buildDomain(rows)
+	return domain.BuildDomain(rows)
 }
 
 func (sql *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64, countServer int) ([]domain.DetailDomain, error) {
@@ -111,65 +110,5 @@ func (sql *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64
 		log.Fatal(err)
 	}
 
-	return buildDetailsDomain(rows)
-}
-
-func buildDomain(rows *sql.Rows) (domain.Domain, error) {
-	var result domain.Domain
-	resultEmpty := domain.Domain{}
-
-	for rows.Next() {
-		b := domain.Domain{}
-
-		if err := rows.Scan(&b.ID, &b.Address, &b.LastConsultation); err != nil {
-			return resultEmpty, err
-		}
-
-		result = b
-	}
-
-	if err := rows.Err(); err != nil {
-		return resultEmpty, err
-	}
-
-	return result, nil
-}
-
-func buildDomains(rows *sql.Rows) ([]domain.Domain, error) {
-	var results []domain.Domain
-
-	for rows.Next() {
-		b := domain.Domain{}
-
-		if err := rows.Scan(&b.ID, &b.Address, &b.LastConsultation); err != nil {
-			return nil, err
-		}
-		results = append(results, b)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return results, nil
-}
-
-
-func buildDetailsDomain(rows *sql.Rows) ([]domain.DetailDomain, error) {
-	var results []domain.DetailDomain
-
-	for rows.Next() {
-		b := domain.DetailDomain{}
-
-		if err := rows.Scan(&b.ID, &b.IDDomain, &b.IpAddress, &b.Grade, &b.ServerName, &b.Date); err != nil {
-			return nil, err
-		}
-		results = append(results, b)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return results, nil
+	return domain.BuildDetailsDomain(rows)
 }
