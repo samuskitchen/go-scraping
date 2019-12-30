@@ -2,7 +2,6 @@ package http
 
 import (
 	"../../driver"
-
 	"github.com/go-chi/chi"
 	"net/http"
 	"time"
@@ -30,10 +29,18 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	address = command.ValidateURL(address)
 
 	data, err := GetDataSSl(address)
+	if err != nil {
+		command.RespondWithError(w, http.StatusNoContent, err.Error())
+		return
+	}
+
+	pageTitle, pageLogo, err := GetTitleAndLogo(address)
+	if err != nil {
+		command.RespondWithError(w, http.StatusNotFound, "Address not found")
+		return
+	}
 
 	loc, _ := time.LoadLocation("America/Bogota")
-	var dataServer modelServe.DataServe
-	var servers []modelServe.Serve
 	var detailsDomain []modelDomain.DetailDomain
 	var changeServer bool
 
@@ -45,22 +52,21 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		dm.LastConsultation = time.Now().In(loc)
 
 		idDomain, err := rp.repo.CreateDomain(r.Context(), dm)
-
 		if err != nil {
 			command.RespondWithError(w, http.StatusNoContent, err.Error())
+			return
 		}
 
 		saveDetailDomain(data, idDomain, rp, w, r)
 	} else {
 
 		detailsDomain, err := rp.repo.GetDetailsByDomain(r.Context(), payload.ID, len(data.Endpoints))
-
 		if err != nil {
 			command.RespondWithError(w, http.StatusNoContent, err.Error())
+			return
 		}
 
 		changeServer = command.ValidateChangeServer(loc, payload, data, detailsDomain, changeServer)
-
 		if changeServer {
 			err = rp.repo.UpdateLastGetDomain(r.Context(), payload.ID, time.Now())
 			saveDetailDomain(data, payload.ID, rp, w, r)
@@ -69,28 +75,12 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		command.RespondWithError(w, http.StatusNoContent, "Address not found")
+		return
 	}
 
-	buildServer(data, detailsDomain, servers, dataServer, changeServer, w)
+	dataServer := modelServe.BuildServer(data, detailsDomain, changeServer, pageTitle, pageLogo)
 
-}
-
-func buildServer(data modelSsl.SSL, detailsDomain []modelDomain.DetailDomain, servers []modelServe.Serve,
-	dataServer modelServe.DataServe, changeServer bool, w http.ResponseWriter) {
-
-	if "IN_PROGRESS" != data.Status && "DNS" != data.Status {
-		currentGrade := command.GetLowestGradeCurrent(data.Endpoints)
-		var previousGrade string
-
-		if detailsDomain == nil {
-			previousGrade = currentGrade
-		} else {
-			previousGrade = command.GetLowestGradePrevious(detailsDomain)
-		}
-
-		//TODO Build return data
-		dataServer = modelServe.BuildServer(data, servers, changeServer, currentGrade, previousGrade)
-
+	if (modelServe.DataServe{}.Title) != dataServer.Title {
 		command.RespondWithJSON(w, http.StatusOK, dataServer)
 	} else {
 		command.RespondWithJSON(w, http.StatusOK, "Try later the server data is not yet available, Thank you!")
@@ -102,9 +92,22 @@ func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		command.RespondWithError(w, http.StatusNoContent, "Address not found")
+		return
 	}
 
-	command.RespondWithJSON(w, http.StatusOK, payload)
+	payloadItems := modelServe.Items{}
+	items := make([]string, 0)
+
+	for _, element := range payload {
+		value := modelServe.ItemServe{}
+		value.Value = element.Address
+
+		items = append(items, element.Address)
+	}
+
+	payloadItems.Items = items
+
+	command.RespondWithJSON(w, http.StatusOK, payloadItems)
 }
 
 // Method that saves the main details of the domain or server

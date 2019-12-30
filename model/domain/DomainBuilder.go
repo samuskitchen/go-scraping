@@ -5,6 +5,7 @@ import "database/sql"
 func BuildDomain(rows *sql.Rows) (Domain, error) {
 	var result Domain
 	resultEmpty := Domain{}
+	var err error
 
 	for rows.Next() {
 		b := Domain{}
@@ -20,11 +21,12 @@ func BuildDomain(rows *sql.Rows) (Domain, error) {
 		return resultEmpty, err
 	}
 
-	return result, nil
+	return result, err
 }
 
 func BuildDomains(rows *sql.Rows) ([]Domain, error) {
 	var results []Domain
+	var err error
 
 	for rows.Next() {
 		b := Domain{}
@@ -39,11 +41,12 @@ func BuildDomains(rows *sql.Rows) ([]Domain, error) {
 		return nil, err
 	}
 
-	return results, nil
+	return results, err
 }
 
 func BuildDetailsDomain(rows *sql.Rows) ([]DetailDomain, error) {
 	var results []DetailDomain
+	var err error
 
 	for rows.Next() {
 		b := DetailDomain{}
@@ -58,5 +61,5 @@ func BuildDetailsDomain(rows *sql.Rows) ([]DetailDomain, error) {
 		return nil, err
 	}
 
-	return results, nil
+	return results, err
 }

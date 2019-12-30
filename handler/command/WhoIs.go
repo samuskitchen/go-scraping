@@ -14,7 +14,7 @@ func RunWhoIs(ipAddr string) map[string][]string {
 	// Parse IP to make sure it is valid
 	ipObj := net.ParseIP(ipAddr)
 	if ipObj == nil {
-		log.Fatal("Invalid IP Address!")
+		log.Println("Invalid IP Address!")
 	}
 
 	// Use parsed IP for security reasons
@@ -49,13 +49,13 @@ func runWhoIsCommand(args ...string) []byte {
 	out, err := exec.Command("whois", args...).Output()
 	if err != nil {
 		if err.Error() != "exit status 2" {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 
 	_, err = isValidResponse(out)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return out

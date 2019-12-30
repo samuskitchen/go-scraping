@@ -32,25 +32,18 @@ func main() {
 
 	initDataBase(connection.SQL)
 
-	r := chi.NewRouter()
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Logger)
-
-	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	})
-	r.Use(cors.Handler)
+	router := chi.NewRouter()
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Logger)
+	router.Use(middleware.RequestID)
+	router.Use(setDefaultHeaders().Handler)
 
 	dHandler := dh.NewServerHandler(connection)
-	r.Route("/", func(rt chi.Router) {
+	router.Route("/", func(rt chi.Router) {
 		rt.Mount("/scraping", domainRouter(dHandler))
 	})
 
-	http.ListenAndServe(":8005", r)
+	http.ListenAndServe(":8005", router)
 
 }
 
@@ -62,23 +55,34 @@ func domainRouter(dHandler *dh.Domain) http.Handler {
 	return r
 }
 
+func setDefaultHeaders() *cors.Cors {
+	headers := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+	return headers
+}
+
 func initDataBase(connection *sql.DB) {
 
 	if _, err := connection.Exec(
 		"CREATE TABLE IF NOT EXISTS domain (id SERIAL PRIMARY KEY, address varchar(100) NOT NULL, last_consultation TIMESTAMP NOT NULL)");
 		err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	if _, err := connection.Exec(
 		"CREATE TABLE IF NOT EXISTS detail_domain (id serial PRIMARY KEY, id_domain serial NOT NULL, ipaddress varchar(100) NOT NULL, servername varchar(200) NULL, grade varchar(10) NOT NULL, date TIMESTAMP NOT NULL, CONSTRAINT detail_domain_fk FOREIGN KEY (id_domain) REFERENCES domain(id))");
 		err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	/*if _, err := connection.Exec(
 		"INSERT INTO domain (address) VALUES ('google.com'), ('s4n.co')");
 		err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}*/
 }

@@ -38,7 +38,7 @@ func GetLowestGradeCurrent(data []modelSsl.Endpoint) string {
 		}
 	}
 
-	if len(gradeAscii) > 1 {
+	if len(gradeAscii) > 0 {
 		sort.Slice(gradeAscii, func(i, j int) bool {
 			return gradeAscii[i] > gradeAscii[j]
 		})
@@ -62,7 +62,7 @@ func GetLowestGradePrevious(detail []modelDomain.DetailDomain) string {
 		}
 	}
 
-	if len(gradeAscii) > 1 {
+	if len(gradeAscii) > 0 {
 		sort.Slice(gradeAscii, func(i, j int) bool {
 			return gradeAscii[i] > gradeAscii[j]
 		})

@@ -26,7 +26,7 @@ func (sql *sqlDomainRepo) CreateDomain(ctx context.Context, domain domain.Domain
 
 	stmt, err := sql.Conn.PrepareContext(ctx, query)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer stmt.Close()
 
@@ -45,14 +45,14 @@ func (sql *sqlDomainRepo) CreateDetailDomain(ctx context.Context, detailDomain d
 	stmt, err := sql.Conn.PrepareContext(ctx, query)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	_, err = stmt.ExecContext(ctx, detailDomain.IDDomain, detailDomain.IpAddress, detailDomain.ServerName, detailDomain.Grade, detailDomain.Date)
 	defer stmt.Close()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return err
@@ -64,14 +64,14 @@ func (sql *sqlDomainRepo) UpdateLastGetDomain(ctx context.Context, idDomain int6
 	stmt, err := sql.Conn.PrepareContext(ctx, query)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	_, err = stmt.ExecContext(ctx, date, idDomain)
 	defer stmt.Close()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return err
@@ -83,7 +83,7 @@ func (sql *sqlDomainRepo) GetAllDomain(ctx context.Context) ([]domain.Domain, er
 	rows, err := sql.Conn.QueryContext(ctx, query)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return domain.BuildDomains(rows)
@@ -95,7 +95,7 @@ func (sql *sqlDomainRepo) GetDomainByAddress(ctx context.Context, address string
 	rows, err := sql.Conn.QueryContext(ctx, query, address)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return domain.BuildDomain(rows)
@@ -107,7 +107,7 @@ func (sql *sqlDomainRepo) GetDetailsByDomain(ctx context.Context, idDomain int64
 	rows, err := sql.Conn.QueryContext(ctx, query, idDomain, countServer)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return domain.BuildDetailsDomain(rows)

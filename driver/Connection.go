@@ -29,7 +29,7 @@ func ConnectSQL(host, port, user, pass, dbname string) (*DB, error){
 
 	db, err := sql.Open("postgres", dbSource)
 	if err != nil {
-		log.Fatal("error connecting to the database: ", err)
+		log.Println("error connecting to the database: ", err)
 		panic(err)
 	}
 
