@@ -1,11 +1,13 @@
 package http
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
+// GetTitleAndLogo Get the Logo and the title of the indicated address
 func GetTitleAndLogo(address string) (string, string, error) {
 	// Make HTTP GET request
 	response, err := http.Get("https://www." + address + "/")
@@ -51,8 +53,8 @@ func GetTitleAndLogo(address string) (string, string, error) {
 func validateType(value string) bool {
 	types := []string{"image/x-icon", "image/icon", "image/vnd.microsoft.icon", "image/svg+xml", "image/png", "image/jpg"}
 
-	for _, element := range types{
-		if element == value{
+	for _, element := range types {
+		if element == value {
 			return true
 		}
 	}

@@ -1,15 +1,16 @@
 package domain
 
 import (
-	"../../model/domain"
-	repo "../../repository"
 	"context"
 	"database/sql"
-	_ "github.com/lib/pq"
 	"log"
 	"time"
+
+	"../../model/domain"
+	repo "../../repository"
 )
 
+// NewSQLDomainRepo retunrs implement of post repository interface
 func NewSQLDomainRepo(Conn *sql.DB) repo.DomainRepo {
 	return &sqlDomainRepo{
 		Conn: Conn,

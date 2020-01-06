@@ -1,10 +1,11 @@
 package http
 
 import (
-	"../../driver"
-	"github.com/go-chi/chi"
 	"net/http"
 	"time"
+
+	"../../driver"
+	"github.com/go-chi/chi"
 
 	"../../handler/command"
 	modelServe "../../model"
@@ -14,16 +15,19 @@ import (
 	"../../repository/domain"
 )
 
+// NewServerHandler ...
 func NewServerHandler(db *driver.DB) *Domain {
 	return &Domain{
 		repo: domain.NewSQLDomainRepo(db.SQL),
 	}
 }
 
+// Domain ...
 type Domain struct {
 	repo repository.DomainRepo
 }
 
+// GetByAddress We get all the information by address
 func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	address := chi.URLParam(r, "address")
 	address = command.ValidateURL(address)
@@ -87,6 +91,7 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllAddress We get all the addresses we have consulted
 func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
 	payload, err := rp.repo.GetAllDomain(r.Context())
 
@@ -105,7 +110,7 @@ func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
 		items = append(items, element.Address)
 	}
 
-	payloadItems.Items = items
+	//payloadItems.Items = items
 
 	command.RespondWithJSON(w, http.StatusOK, payloadItems)
 }
