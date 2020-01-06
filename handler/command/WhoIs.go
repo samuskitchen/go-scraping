@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// RunWhoIs start the WhoIs command
 func RunWhoIs(ipAddr string) map[string][]string {
 
 	// Parse IP to make sure it is valid
@@ -21,12 +22,12 @@ func RunWhoIs(ipAddr string) map[string][]string {
 	ipAddr = ipObj.String()
 
 	// Finally, run the actual whois command with the right whois servers
-	whois := runWhoIsCommand(ipAddr)
+	result := runWhoIsCommand(ipAddr)
 
 	var outPut map[string][]string
 	outPut = make(map[string][]string)
 
-	singleLines := strings.Split(string(whois), "\n")
+	singleLines := strings.Split(string(result), "\n")
 
 	re := regexp.MustCompile("^[#%>]+")
 	for _, line := range singleLines {

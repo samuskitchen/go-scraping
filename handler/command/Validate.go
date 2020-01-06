@@ -11,7 +11,7 @@ import (
 	modelSsl "../../model/ssllabs"
 )
 
-// respondWithJSON write json response format
+// RespondWithJSON write json response format
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 
@@ -20,60 +20,60 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// respondWithError return error message
+// RespondWithError return error message
 func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	RespondWithJSON(w, code, map[string]string{"message": msg})
 }
 
-// We get the lowest grade from current servers
+// GetLowestGradeCurrent We get the lowest grade from current servers
 func GetLowestGradeCurrent(data []modelSsl.Endpoint) string {
-	var gradeAscii []int
+	var gradeASCII []int
 	var grade string
 
 	for _, dataElement := range data {
 		if dataElement.Grade != "A+" {
-			gradeAscii = append(gradeAscii, int(dataElement.Grade[0]))
+			gradeASCII = append(gradeASCII, int(dataElement.Grade[0]))
 		} else {
 			grade = "A+"
 		}
 	}
 
-	if len(gradeAscii) > 0 {
-		sort.Slice(gradeAscii, func(i, j int) bool {
-			return gradeAscii[i] > gradeAscii[j]
+	if len(gradeASCII) > 0 {
+		sort.Slice(gradeASCII, func(i, j int) bool {
+			return gradeASCII[i] > gradeASCII[j]
 		})
 
-		grade = string(gradeAscii[0])
+		grade = string(gradeASCII[0])
 	}
 
 	return grade
 }
 
-// We get the lowest grade from previous servers
+// GetLowestGradePrevious  We get the lowest grade from previous servers
 func GetLowestGradePrevious(detail []modelDomain.DetailDomain) string {
-	var gradeAscii []int
+	var gradeASCII []int
 	var grade string
 
 	for _, dataElement := range detail {
 		if dataElement.Grade != "A+" {
-			gradeAscii = append(gradeAscii, int(dataElement.Grade[0]))
+			gradeASCII = append(gradeASCII, int(dataElement.Grade[0]))
 		} else {
 			grade = "A+"
 		}
 	}
 
-	if len(gradeAscii) > 0 {
-		sort.Slice(gradeAscii, func(i, j int) bool {
-			return gradeAscii[i] > gradeAscii[j]
+	if len(gradeASCII) > 0 {
+		sort.Slice(gradeASCII, func(i, j int) bool {
+			return gradeASCII[i] > gradeASCII[j]
 		})
 
-		grade = string(gradeAscii[0])
+		grade = string(gradeASCII[0])
 	}
 
 	return grade
 }
 
-// Validate if there is a change in the main data of the servers
+// ValidateChangeServer Validate if there is a change in the main data of the servers
 func ValidateChangeServer(loc *time.Location, payload modelDomain.Domain, data modelSsl.SSL, detailsDomain []modelDomain.DetailDomain, changeServer bool) bool {
 	hours := DiffHours(loc, payload)
 	if hours >= 1 {
@@ -92,7 +92,7 @@ func ValidateChangeServer(loc *time.Location, payload modelDomain.Domain, data m
 	return changeServer
 }
 
-// Total hours difference
+// DiffHours Total hours difference
 func DiffHours(loc *time.Location, payload modelDomain.Domain) float64 {
 	t1 := time.Date(time.Now().Year(),
 		time.Now().Month(),
@@ -109,7 +109,7 @@ func DiffHours(loc *time.Location, payload modelDomain.Domain) float64 {
 	return t1.Sub(t2).Hours()
 }
 
-// Validate that the URL is cleaned
+// ValidateURL Validate that the URL is cleaned
 func ValidateURL(address string) string {
 	space := regexp.MustCompile(`^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)`)
 	address = space.ReplaceAllString(address, "")

@@ -84,7 +84,7 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 
 	dataServer := modelServe.BuildServer(data, detailsDomain, changeServer, pageTitle, pageLogo)
 
-	if (modelServe.DataServe{}.Title) != dataServer.Title {
+	if (modelServe.DataServe{}.Logo) != dataServer.Logo {
 		command.RespondWithJSON(w, http.StatusOK, dataServer)
 	} else {
 		command.RespondWithJSON(w, http.StatusOK, "Try later the server data is not yet available, Thank you!")
