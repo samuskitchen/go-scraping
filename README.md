@@ -18,6 +18,7 @@ Sample scraping operation using Golang and CockroachDb (PostgreSQL)
 ## Required Packages
 - Dependency management
     * [dep](https://github.com/golang/dep)
+    * [goQuery](https://github.com/PuerkitoBio/goquery)
 - Database
     * [CockroachDb](https://github.com/lib/pq)
 - Routing
