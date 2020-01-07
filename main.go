@@ -3,7 +3,6 @@ package main
 import (
 	"./driver"
 	dh "./handler/http"
-	"./util"
 	"database/sql"
 	"fmt"
 	"github.com/go-chi/chi"
@@ -16,12 +15,12 @@ import (
 
 func main() {
 
-	properties := util.NewProperties()
+	//properties := util.NewProperties()
 
-	dbName := properties.GetString("DB_NAME")
-	dbHost := properties.GetString("DB_HOST")
-	dbUser := properties.GetString("DB_USER")
-	dbPort := properties.GetString("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPort := os.Getenv("DB_PORT")
 
 	connection, err := driver.ConnectSQL(dbHost, dbPort, dbUser, "", dbName)
 	if err != nil {
@@ -79,10 +78,4 @@ func initDataBase(connection *sql.DB) {
 		err != nil {
 		log.Println(err)
 	}
-
-	/*if _, err := connection.Exec(
-		"INSERT INTO domain (address) VALUES ('google.com'), ('s4n.co')");
-		err != nil {
-		log.Println(err)
-	}*/
 }
