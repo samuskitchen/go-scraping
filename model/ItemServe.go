@@ -1,5 +1,5 @@
 package model
 
 type ItemServe struct {
-	Value string `json:""`
+	Address string `json:"address"`
 }

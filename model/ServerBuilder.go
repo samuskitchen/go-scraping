@@ -6,24 +6,31 @@ import (
 	modelSsl "../model/ssllabs"
 )
 
+func BuilderAddress(payload []modelDomain.Domain) Items {
+	payloadItems := Items{}
+	items := make([]ItemServe, 0)
+
+	for _, element := range payload {
+		items = append(items, ItemServe{Address: element.Address})
+	}
+	payloadItems.Items = items
+	return payloadItems
+}
+
 func BuildServer(data modelSsl.SSL, detailsDomain []modelDomain.DetailDomain, changeServer bool, pageTitle string, pageLogo string) DataServe {
 
-	if "IN_PROGRESS" != data.Status && "DNS" != data.Status {
-		currentGrade := command.GetLowestGradeCurrent(data.Endpoints)
-		var previousGrade string
+	currentGrade := command.GetLowestGradeCurrent(data.Endpoints)
+	var previousGrade string
 
-		if detailsDomain == nil {
-			previousGrade = currentGrade
-		} else {
-			previousGrade = command.GetLowestGradePrevious(detailsDomain)
-		}
-
-		dataServer := buildData(data, currentGrade, previousGrade, changeServer, pageTitle, pageLogo)
-
-		return dataServer
+	if detailsDomain == nil {
+		previousGrade = currentGrade
 	} else {
-		return DataServe{}
+		previousGrade = command.GetLowestGradePrevious(detailsDomain)
 	}
+
+	dataServer := buildData(data, currentGrade, previousGrade, changeServer, pageTitle, pageLogo)
+
+	return dataServer
 }
 
 func buildData(data modelSsl.SSL, currentGrade string, previousGrade string, changeServer bool, pageTitle string, pageLogo string) DataServe {

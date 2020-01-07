@@ -38,6 +38,11 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if "IN_PROGRESS" == data.Status || "DNS" == data.Status {
+		command.RespondWithJSON(w, http.StatusOK, "Try later the server data is not yet available, Thank you!")
+		return
+	}
+
 	pageTitle, pageLogo, err := GetTitleAndLogo(address)
 	if err != nil {
 		command.RespondWithError(w, http.StatusNotFound, "Address not found")
@@ -100,18 +105,7 @@ func (rp *Domain) GetAllAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payloadItems := modelServe.Items{}
-	items := make([]string, 0)
-
-	for _, element := range payload {
-		value := modelServe.ItemServe{}
-		value.Value = element.Address
-
-		items = append(items, element.Address)
-	}
-
-	//payloadItems.Items = items
-
+	payloadItems := modelServe.BuilderAddress(payload)
 	command.RespondWithJSON(w, http.StatusOK, payloadItems)
 }
 
