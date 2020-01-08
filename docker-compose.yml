@@ -1,42 +1,45 @@
 version: '3'
 
 services:
+  cockroachdb:
+    image: cockroachdb/cockroach
+    container_name: cockroachdb
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    expose:
+      - "8080"
+      - "26257"
+    volumes:
+##      - ./data/var/lib/cockroach
+      - ./var/lib/cockroach/data
+    command: start --insecure
+#    restart: on-failure
 
-  web:
-    restart: unless-stopped
-    image: scraping
+  db-init:
+    image: cockroachdb/cockroach
+    depends_on:
+      - cockroachdb
+    volumes:
+      - ./setup_db.sh:/setup_db.sh
+    entrypoint: "/bin/bash"
+    command: /setup_db.sh
+
+  app:
+    container_name: scraping
+    build: .
+#    image: scraping
     ports:
       - 8005:8005
     links:
       - cockroachdb
-#    depends_on:
-#      - cockroachdb
+    depends_on:
+      - db-init
     environment:
       - "DB_PORT=26257"
       - "DB_HOST=cockroachdb"
       - "DB_NAME=scraping"
       - "DB_USER=scraping"
-
-  cockroachdb:
-    container_name: cockroachdb
-    image: cockroachdb/cockroach
-    command: start --insecure
-    #--store=attrs=ssd,path=/var/lib/cockroach/ --store=node1 --listen-addr=localhost:26257 --http-addr=localhost:8080 --join=localhost:26257,localhost:26258,localhost:26259 --background
-    #restart: always
-    #volumes:
-     # - data:/var/lib/cockroach
-    restart: unless-stopped
-    expose:
-      - "8080"
-      - "26257"
-    ports:
-      - "26257:26257"
-      - "8080:8080"
+    restart: on-failure
     volumes:
-      - ./data/var/lib/cockroach
-  db-init:
-    image: cockroachdb/cockroach
-    volumes:
-      - ./setup_db.sh:/setup_db.sh
-    entrypoint: "/bin/bash"
-    command: /setup_db.sh
+      - .:/usr/src/app/
