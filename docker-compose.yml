@@ -11,10 +11,8 @@ services:
       - "8080"
       - "26257"
     volumes:
-##      - ./data/var/lib/cockroach
-      - ./var/lib/cockroach/data
+      - ./:/var/lib/cockroach
     command: start --insecure
-#    restart: on-failure
 
   db-init:
     image: cockroachdb/cockroach
@@ -27,8 +25,7 @@ services:
 
   app:
     container_name: scraping
-    build: .
-#    image: scraping
+    image: scraping
     ports:
       - 8005:8005
     links:
@@ -41,5 +38,3 @@ services:
       - "DB_NAME=scraping"
       - "DB_USER=scraping"
     restart: on-failure
-    volumes:
-      - .:/usr/src/app/

@@ -15,8 +15,6 @@ import (
 
 func main() {
 
-	//properties := util.NewProperties()
-
 	dbName := os.Getenv("DB_NAME")
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")

@@ -35,4 +35,4 @@ cd scraping
 chmod +x run.sh
 ./run.sh
 
-docker-compose up
+docker-compose up / docker-compose down
