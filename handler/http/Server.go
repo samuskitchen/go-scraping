@@ -38,7 +38,7 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if "IN_PROGRESS" == data.Status || "DNS" == data.Status {
+	if "IN_PROGRESS" == data.Status || "DNS" == data.Status || "" == data.Status{
 		command.RespondWithJSON(w, http.StatusOK, "Try later the server data is not yet available, Thank you!")
 		return
 	}
