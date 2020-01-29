@@ -6,7 +6,7 @@ Sample scraping operation using Golang and CockroachDb (PostgreSQL)
 ## API ENDPOINTS
 
 ### Details by Address
-- Path : `/scraping/{address}`
+- Path : `/scraping/address={address}`
 - Method: `GET`
 - Response: `200`
 
@@ -28,7 +28,7 @@ Sample scraping operation using Golang and CockroachDb (PostgreSQL)
 First clone the repo then go to scraping folder. After that build your image and run by docker. Make sure you have docker in your machine. 
 
 ```
-git clone https://github.com/samuskitchen/scraping.git
+git clone https://github.com/samuskitchen/go-scraping
 
 cd scraping
 
