@@ -30,7 +30,7 @@ First clone the repo then go to scraping folder. After that build your image and
 ```
 git clone https://github.com/samuskitchen/go-scraping
 
-cd scraping
+cd go-scraping
 
 chmod +x run.sh
 ./run.sh
