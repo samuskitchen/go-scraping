@@ -3,6 +3,7 @@ package http
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -10,7 +11,8 @@ import (
 // GetTitleAndLogo Get the Logo and the title of the indicated address
 func GetTitleAndLogo(address string) (string, string, error) {
 	// Make HTTP GET request
-	response, err := http.Get("https://www." + address + "/")
+	addressComplete := "https://www." + address + "/"
+	response, err := http.Get(addressComplete)
 
 	if err != nil {
 		log.Println(err)
@@ -46,6 +48,10 @@ func GetTitleAndLogo(address string) (string, string, error) {
 			pageLogo = valueContent
 		}
 	})
+
+	if !strings.Contains(pageLogo, "https") {
+		pageLogo = addressComplete + pageLogo
+	}
 
 	return pageTitle, pageLogo, err
 }

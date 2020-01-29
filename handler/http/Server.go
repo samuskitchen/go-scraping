@@ -39,13 +39,13 @@ func (rp *Domain) GetByAddress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if "IN_PROGRESS" == data.Status || "DNS" == data.Status || "" == data.Status{
-		command.RespondWithJSON(w, http.StatusOK, "Try later the server data is not yet available, Thank you!")
+		command.RespondWithJSON(w, http.StatusPartialContent, "Try later the server data is not yet available, Thank you!")
 		return
 	}
 
 	pageTitle, pageLogo, err := GetTitleAndLogo(address)
 	if err != nil {
-		command.RespondWithError(w, http.StatusNotFound, "Address not found")
+		command.RespondWithError(w, http.StatusPartialContent, "Address not found")
 		return
 	}
 

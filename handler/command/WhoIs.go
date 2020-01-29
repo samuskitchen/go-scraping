@@ -16,6 +16,7 @@ func RunWhoIs(ipAddr string) map[string][]string {
 	ipObj := net.ParseIP(ipAddr)
 	if ipObj == nil {
 		log.Println("Invalid IP Address!")
+		return make(map[string][]string)
 	}
 
 	// Use parsed IP for security reasons

@@ -30,9 +30,10 @@ func main() {
 	initDataBase(connection.SQL)
 
 	router := chi.NewRouter()
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.Logger)
 	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
 	router.Use(setDefaultHeaders().Handler)
 
 	dHandler := dh.NewServerHandler(connection)
@@ -47,7 +48,7 @@ func main() {
 func domainRouter(dHandler *dh.Domain) http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", dHandler.GetAllAddress)
-	r.Get("/{address}", dHandler.GetByAddress)
+	r.Get("/address={address}", dHandler.GetByAddress)
 
 	return r
 }
