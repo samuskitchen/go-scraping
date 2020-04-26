@@ -11,7 +11,7 @@ import (
 
 // GetDataSSl obtains the SSL information from the indicated address
 func GetDataSSl(address string) (model.SSL, error) {
-	response, err := http.Get("https://api.ssllabs.com/api/v3/analyze?host=​" + address)
+	response, err := http.Get("https://api.ssllabs.com/api/v3/analyze?host=" + address)
 
 	if err != nil {
 		log.Println(err)
