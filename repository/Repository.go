@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"../model/domain"
 	"context"
+	"go-scraping/model/domain"
 	"time"
 )
 

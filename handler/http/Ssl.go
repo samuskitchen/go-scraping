@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	model "../../model/ssllabs"
+	model "go-scraping/model/ssllabs"
 )
 
 // GetDataSSl obtains the SSL information from the indicated address

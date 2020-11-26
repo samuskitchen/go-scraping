@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"../../model/domain"
-	repo "../../repository"
+	"go-scraping/model/domain"
+	repo "go-scraping/repository"
 )
 
 // NewSQLDomainRepo retunrs implement of post repository interface

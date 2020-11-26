@@ -7,8 +7,8 @@ import (
 	"sort"
 	"time"
 
-	modelDomain "../../model/domain"
-	modelSsl "../../model/ssllabs"
+	modelDomain "go-scraping/model/domain"
+	modelSsl "go-scraping/model/ssllabs"
 )
 
 // RespondWithJSON write json response format

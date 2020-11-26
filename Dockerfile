@@ -20,12 +20,11 @@ ADD . /app
 # Set the current working directory inside the container
 WORKDIR /app
 
-# Download all dependencies
-RUN go get github.com/PuerkitoBio/goquery
-RUN go get github.com/lib/pq
-RUN go get github.com/go-chi/chi
-RUN go get github.com/go-chi/chi/middleware
-RUN go get github.com/go-chi/cors
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and the go.sum files are not changed
+RUN go mod download
 
 # Build the Go app
 RUN go build -v -o main .

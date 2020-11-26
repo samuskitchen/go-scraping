@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"time"
 
-	"../../driver"
 	"github.com/go-chi/chi"
+	"go-scraping/driver"
 
-	"../../handler/command"
-	modelServe "../../model"
-	modelDomain "../../model/domain"
-	modelSsl "../../model/ssllabs"
-	"../../repository"
-	"../../repository/domain"
+	"go-scraping/handler/command"
+	modelServe "go-scraping/model"
+	modelDomain "go-scraping/model/domain"
+	modelSsl "go-scraping/model/ssllabs"
+	"go-scraping/repository"
+	"go-scraping/repository/domain"
 )
 
 // NewServerHandler ...

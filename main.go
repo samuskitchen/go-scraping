@@ -1,13 +1,13 @@
 package main
 
 import (
-	"./driver"
-	dh "./handler/http"
 	"database/sql"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"go-scraping/driver"
+	dh "go-scraping/handler/http"
 	"log"
 	"net/http"
 	"os"

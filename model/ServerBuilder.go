@@ -1,9 +1,9 @@
 package model
 
 import (
-	"../handler/command"
-	modelDomain "../model/domain"
-	modelSsl "../model/ssllabs"
+	"go-scraping/handler/command"
+	modelDomain "go-scraping/model/domain"
+	modelSsl "go-scraping/model/ssllabs"
 )
 
 func BuilderAddress(payload []modelDomain.Domain) Items {
